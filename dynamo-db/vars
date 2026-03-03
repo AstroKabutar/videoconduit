@@ -1,0 +1,4 @@
+region="ap-south-1"
+table_name="videoconduit_database"
+partition_key_name="email"
+sort_key_name="name"

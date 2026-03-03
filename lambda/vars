@@ -1,0 +1,6 @@
+region="ap-south-1"
+trigger_media_convert_job_name="convert_media"
+table_name="videoconduit_database"
+mediaconvertrole="ToBePassedFromLambda"
+bucket_arn="arn:aws:s3:::446636301131-videoconduit-storage"
+geturllambda="s3presignedgeturl"

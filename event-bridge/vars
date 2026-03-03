@@ -1,0 +1,5 @@
+region="ap-south-1"
+bucket_name="446636301131-videoconduit-storage"
+lambda_name="convert_media"
+submit_job_lambda_arn="arn:aws:lambda:ap-south-1:446636301131:function:convert_media"
+get_presigned_url_lambda_arn="arn:aws:lambda:ap-south-1:446636301131:function:s3presignedgeturl"

@@ -20,12 +20,16 @@ module "s3_bucket" {
     force_destroy = true
 
     tags = {
-        "Purpose" = "VideoConduit Frontend",
+        "Purpose" = "videoconduit frontend",
         "Project" = "videoconduit"
     }
 
-    # ability to attach public policies define by user
+    # ability to attach public policies define by user and allow public policy to be attached
     attach_public_policy = true
+    block_public_acls = false
+    block_public_policy = false
+    ignore_public_acls = false
+    restrict_public_buckets = false
 
     versioning = {
         enabled = true
@@ -36,17 +40,6 @@ module "s3_bucket" {
         index_document = "index.html"
         error_document = "error.html"
     }
-}
-
-# public access control list
-# https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html
-resource "aws_s3_bucket_public_access_block" "public-access-settings" {
-    bucket = module.s3_bucket.s3_bucket_id
-
-    block_public_acls = false
-    block_public_policy = false
-    ignore_public_acls = false
-    restrict_public_buckets = false
 }
 
 # public read policy generation JSON
@@ -68,5 +61,5 @@ resource "aws_s3_bucket_policy" "s3_static_website_public_read" {
     bucket = module.s3_bucket.s3_bucket_id
     policy = data.aws_iam_policy_document.s3_public_read_policy.json
 
-    depends_on = [aws_s3_bucket_public_access_block.public-access-settings]
+    depends_on = [module.s3_bucket]
 }

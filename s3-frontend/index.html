@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Conduit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            background: #4a4a4a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .glass h1 {
+            color: #fff;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+        .file-input-wrap {
+            margin-bottom: 1rem;
+        }
+        .file-input-wrap input[type="file"] {
+            display: none;
+        }
+        .file-label {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .file-label:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .file-name {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .upload-btn {
+            padding: 0.75rem 2rem;
+            background: rgba(255, 255, 255, 0.25);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+        .upload-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+        .upload-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #output {
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .glass-wrap {
+            position: relative;
+            padding: 4px;
+            border-radius: 20px;
+        }
+        .progress-ring {
+            position: absolute;
+            inset: -2px;
+            border-radius: 18px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .glass-wrap.uploading .progress-ring,
+        .glass-wrap.uploaded .progress-ring {
+            opacity: 1;
+        }
+        .progress-ring svg {
+            width: 100%;
+            height: 100%;
+            border-radius: 18px;
+        }
+        .progress-ring path {
+            fill: none;
+            stroke: lime;
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: var(--path-len, 100);
+            stroke-dashoffset: var(--path-offset, 100);
+            filter: drop-shadow(0 0 6px lime) drop-shadow(0 0 12px rgba(0, 255, 0, 0.6));
+            transition: stroke-dashoffset 0.1s linear;
+        }
+        .glass-wrap.uploaded .progress-ring path {
+            stroke-dashoffset: 0;
+            filter: drop-shadow(0 0 8px lime) drop-shadow(0 0 16px rgba(0, 255, 0, 0.8));
+            animation: neon-glow 1.5s ease-in-out infinite;
+        }
+        @keyframes neon-glow {
+            0%, 100% { filter: drop-shadow(0 0 8px lime) drop-shadow(0 0 16px rgba(0, 255, 0, 0.8)); }
+            50% { filter: drop-shadow(0 0 12px lime) drop-shadow(0 0 24px rgba(0, 255, 0, 0.9)); }
+        }
+        .glass {
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 0 0 transparent;
+            transition: box-shadow 0.3s;
+        }
+        .glass-wrap.uploading .glass {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(0, 255, 0, 0.4), 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+        .glass-wrap.uploaded .glass {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 6px 24px lime, 0 0 40px rgba(0, 255, 0, 0.6), 0 0 80px rgba(0, 255, 0, 0.3);
+        }
+        .uploaded-msg {
+            color: lime;
+            text-shadow: 0 0 10px lime, 0 0 20px rgba(0, 255, 0, 0.8);
+            font-weight: 600;
+            animation: neon-pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes neon-pulse {
+            0%, 100% { opacity: 1; text-shadow: 0 0 10px lime, 0 0 20px rgba(0, 255, 0, 0.8); }
+            50% { opacity: 0.9; text-shadow: 0 0 15px lime, 0 0 30px rgba(0, 255, 0, 0.9); }
+        }
+    </style>
+    <script>
+        const API_BASE = 'https://ahly5al4xa.execute-api.ap-south-1.amazonaws.com/prod';
+
+        async function getPresignedUrl(objectKey) {
+            const url = `${API_BASE}/presigned?key=${encodeURIComponent(objectKey)}`;
+            const res = await fetch(url);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || `HTTP ${res.status}`);
+            }
+            return res.json();
+        }
+
+        async function uploadFile(file) {
+            const objectKey = `upload/${file.name}`;
+            const { url, fields } = await getPresignedUrl(objectKey);
+            const formData = new FormData();
+            Object.entries(fields).forEach(([k, v]) => formData.append(k, v));
+            formData.append('file', file);
+            const xhr = new XMLHttpRequest();
+            return new Promise((resolve, reject) => {
+                xhr.upload.addEventListener('progress', (e) => {
+                    const pct = e.lengthComputable ? e.loaded / e.total : 0;
+                    document.getElementById('progress-ring').style.setProperty('--path-offset', 100 - pct * 100);
+                });
+                xhr.addEventListener('load', () => {
+                    if (xhr.status >= 200 && xhr.status < 300) resolve(objectKey);
+                    else reject(new Error(`Upload failed: ${xhr.status}`));
+                });
+                xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+                xhr.open('POST', url);
+                xhr.send(formData);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('video-file');
+            const fileNameSpan = document.querySelector('.file-name');
+            const uploadBtn = document.getElementById('upload-btn');
+            const output = document.getElementById('output');
+
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    fileNameSpan.textContent = file.name;
+                    uploadBtn.disabled = false;
+                } else {
+                    fileNameSpan.textContent = '';
+                    uploadBtn.disabled = true;
+                }
+            });
+
+            uploadBtn.addEventListener('click', async function() {
+                const file = fileInput.files[0];
+                if (!file) {
+                    output.textContent = 'Please choose a file first.';
+                    return;
+                }
+                const wrap = document.getElementById('glass-wrap');
+                const progressRing = document.getElementById('progress-ring');
+                wrap.classList.remove('uploaded');
+                wrap.classList.add('uploading');
+                progressRing.style.setProperty('--path-len', '100');
+                progressRing.style.setProperty('--path-offset', '100');
+                output.textContent = 'Uploading...';
+                try {
+                    const key = await uploadFile(file);
+                    wrap.classList.remove('uploading');
+                    wrap.classList.add('uploaded');
+                    progressRing.style.setProperty('--path-offset', '0');
+                    output.innerHTML = '<span class="uploaded-msg">Uploaded: ' + key + '</span>';
+                    fileInput.value = '';
+                    fileNameSpan.textContent = '';
+                    uploadBtn.disabled = true;
+                } catch (e) {
+                    wrap.classList.remove('uploading', 'uploaded');
+                    output.textContent = 'Error: ' + e.message;
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="glass-wrap" id="glass-wrap">
+        <div class="progress-ring" id="progress-ring">
+            <svg viewBox="0 0 200 120" preserveAspectRatio="none">
+                <!-- Anticlockwise path: top-left → bottom-left → bottom-right → top-right → top-left -->
+                <path id="progress-path" d="M 2 2 L 2 118 L 198 118 L 198 2 Z" pathLength="100" />
+            </svg>
+        </div>
+        <div class="glass">
+        <h1>Video Conduit</h1>
+        <form id="upload-form">
+            <div class="file-input-wrap">
+                <input type="file" id="video-file" accept="video/*">
+                <label for="video-file" class="file-label">Choose file</label>
+                <div class="file-name"></div>
+            </div>
+            <button type="button" id="upload-btn" class="upload-btn" disabled>Upload</button>
+        </form>
+        <div id="output"></div>
+        </div>
+    </div>
+</body>
+</html>
