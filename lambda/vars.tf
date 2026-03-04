@@ -21,3 +21,8 @@ variable "bucket_arn" {
 variable "geturllambda" {
   type = string
 }
+
+variable "ses_sender_email" {
+  type        = string
+  description = "Verified SES identity to send download link emails from"
+}

@@ -30,6 +30,11 @@ resource "aws_dynamodb_table" "users_data" {
     type = "S"
   }
 
+  ttl {
+    attribute_name = "expiryTime"
+    enabled        = true
+  }
+
   tags = {
     Purpose = "Users database to keep track of the process"
     Project = "videoconduit"

@@ -16,6 +16,11 @@ provider "aws" {
 resource "aws_iam_role" "geturl_lambda_role" {
   name = "${var.geturllambda}-role"
 
+  tags = {
+    Purpose = "IAM role for presigned GET URL Lambda"
+    Project = "videoconduit"
+  }
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -46,6 +51,21 @@ resource "aws_iam_role_policy_attachment" "geturl_lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy" "geturl_lambda_ses" {
+  name   = "${var.geturllambda}-ses"
+  role   = aws_iam_role.geturl_lambda_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ses:SendEmail", "ses:DeleteEmailIdentity"]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_lambda_function" "geturl_lambda" {
   function_name = var.geturllambda
   role          = aws_iam_role.geturl_lambda_role.arn
@@ -59,6 +79,16 @@ resource "aws_lambda_function" "geturl_lambda" {
 
   ephemeral_storage {
     size = 512
+  }
+
+  environment {
+    variables = {
+      TABLE_NAME        = var.table_name
+      PARTITION_KEY     = "email"
+      SORT_KEY          = "name"
+      REGION            = var.region
+      SES_SENDER_EMAIL  = var.ses_sender_email
+    }
   }
 
   tags = {
@@ -94,6 +124,11 @@ resource "aws_iam_role" "mediaconvert_role" {
 resource "aws_iam_policy" "mediaconvert_policy" {
   name = "${var.mediaconvertrole}_policy"
 
+  tags = {
+    Purpose = "S3 read/write policy for MediaConvert jobs"
+    Project = "videoconduit"
+  }
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -123,6 +158,11 @@ resource "aws_iam_role_policy_attachment" "mediaconvert_role_attach" {
 resource "aws_iam_policy" "lambda_mediaconvert_policy" {
   name        = "lambda_mediaconvert_policy"
   description = "Policy for Lambda to access MediaConvert and PassRole for MediaConvert jobs"
+
+  tags = {
+    Purpose = "Lambda MediaConvert and PassRole access"
+    Project = "videoconduit"
+  }
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -160,7 +200,8 @@ resource "aws_iam_role_policy_attachment" "lambda_mediaconvert_policy_attach" {
 # ------------------- Cloudwatch logs lambda ------------------- #
 
 resource "aws_cloudwatch_log_group" "lambda_conversion" {
-  name = "/aws/lambda/${var.trigger_media_convert_job_name}"
+  name              = "/aws/lambda/${var.trigger_media_convert_job_name}"
+  retention_in_days = 90
 
   tags = {
     Purpose = "convert media lambda logs"
@@ -169,7 +210,8 @@ resource "aws_cloudwatch_log_group" "lambda_conversion" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda_generate_presigned_url" {
-  name = "/aws/lambda/${var.geturllambda}"
+  name              = "/aws/lambda/${var.geturllambda}"
+  retention_in_days = 90
 
   tags = {
     Purpose = "generate presigned url logs"
@@ -244,7 +286,8 @@ data "aws_iam_policy_document" "lambda_dynamodb_insert" {
     actions = [
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
-      "dynamodb:GetItem"
+      "dynamodb:GetItem",
+      "dynamodb:Query"
     ]
     resources = [
       "arn:aws:dynamodb:${var.region}:*:table/${var.table_name}"
@@ -257,6 +300,11 @@ resource "aws_iam_policy" "lambda_dynamodb_insert" {
   name        = "lambda_dynamodb_insert_policy"
   description = "Allow Lambda to put items only in the specified DynamoDB table"
   policy      = data.aws_iam_policy_document.lambda_dynamodb_insert.json
+
+  tags = {
+    Purpose = "Lambda DynamoDB PutItem/UpdateItem/GetItem/Query"
+    Project = "videoconduit"
+  }
 }
 
 resource "aws_iam_policy_attachment" "lambda_dynamodb_insert" {

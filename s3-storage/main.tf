@@ -36,3 +36,35 @@ resource "aws_s3_bucket_notification" "main" {
   bucket      = aws_s3_bucket.main.id
   eventbridge = true
 }
+
+# S3 lifecycle minimum expiration is 1 day (6 hours not supported).
+# For 6-hour TTL, use S3 Event Notifications + Lambda instead.
+resource "aws_s3_bucket_lifecycle_configuration" "main" {
+  bucket = aws_s3_bucket.main.id
+
+  rule {
+    id     = "delete-upload-after-1-day"
+    status = "Enabled"
+
+    filter {
+      prefix = "upload/"
+    }
+
+    expiration {
+      days = 1
+    }
+  }
+
+  rule {
+    id     = "delete-converted-after-1-day"
+    status = "Enabled"
+
+    filter {
+      prefix = "converted/"
+    }
+
+    expiration {
+      days = 1
+    }
+  }
+}

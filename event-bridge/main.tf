@@ -181,6 +181,11 @@ data "aws_iam_policy_document" "geturl_lambda_eventbridge_invoke_policy" {
 resource "aws_iam_role" "eventbridge_geturl_lambda_trigger" {
   name               = "eventbridge-geturl-lambda-trigger-role"
   assume_role_policy = data.aws_iam_policy_document.geturl_lambda_eventbridge_assume_role.json
+
+  tags = {
+    Purpose = "EventBridge role to invoke presigned URL Lambda on S3 converted events"
+    Project = "videoconduit"
+  }
 }
 
 resource "aws_iam_role_policy" "eventbridge_geturl_lambda_invoke_policy" {
@@ -192,6 +197,11 @@ resource "aws_iam_role_policy" "eventbridge_geturl_lambda_invoke_policy" {
 resource "aws_iam_role" "eventbridge_lambda_trigger" {
   name               = "eventbridge-lambda-trigger-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_eventbridge_assume_role.json
+
+  tags = {
+    Purpose = "EventBridge role to invoke conversion Lambda on S3 upload events"
+    Project = "videoconduit"
+  }
 }
 
 resource "aws_iam_role_policy" "eventbridge_lambda_invoke_policy" {
@@ -216,7 +226,8 @@ resource "aws_cloudwatch_event_target" "s3_object_created_to_lambda" {
 # --------------- Cloudwatch ----------------- #
 
 resource "aws_cloudwatch_log_group" "s3_event_upload" {
-  name = "/aws/events/s3-event-upload"
+  name              = "/aws/events/s3-event-upload"
+  retention_in_days = 90
 
   tags = {
     Purpose = "keep logs for object creation in s3"
@@ -225,7 +236,8 @@ resource "aws_cloudwatch_log_group" "s3_event_upload" {
 }
 
 resource "aws_cloudwatch_log_group" "s3_event_converted" {
-  name = "/aws/events/s3-event-converted"
+  name              = "/aws/events/s3-event-converted"
+  retention_in_days = 90
 
   tags = {
     Purpose = "keep logs for object creation in s3"
