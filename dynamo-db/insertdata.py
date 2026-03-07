@@ -1,3 +1,5 @@
+# Just for testing purposes
+
 import boto3
 
 # Hardcoded DynamoDB table name
