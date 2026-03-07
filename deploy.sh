@@ -1,0 +1,30 @@
+#! /bin/bash
+
+# Files to be depployed marked as 1
+create_ses_identity=0
+generate_presigned_url=0
+generate_presigned_post=0
+submitjob=0
+
+if [ $create_ses_identity -eq 1 ]; then
+    echo "Deploying create_ses_identity"
+    zip -r create_ses_identity.zip create_ses_identity.py
+    aws lambda update-function-code --function-name ${{ secrets.create_ses_identity_function_name }} --zip-file fileb://$create_ses_identity.zip
+
+else if [ $generate_presigned_url -eq 1 ]; then
+    echo "Deploying generate_presigned_url"
+    zip -r finisher.zip generate_presigned_url.py
+    aws lambda update-function-code --function-name ${{ secrets.generate_presigned_url_function_name }} --zip-file fileb://$finisher.zip
+
+else if [ $generate_presigned_post -eq 1 ]; then
+    echo "Deploying generate_presigned_post"
+    zip -r generate_presigned_post.zip generate_presigned_post.py
+    aws lambda update-function-code --function-name ${{ secrets.generate_presigned_post_function_name }} --zip-file fileb://$generate_presigned_post.zip
+
+else if [ $submitjob -eq 1 ]; then
+    echo "Deploying submitjob"
+    zip -r submitjob.zip submitjob.py
+    aws lambda update-function-code --function-name ${{ secrets.submitjob_function_name }} --zip-file fileb://$submitjob.zip
+fi
+
+echo "Deployment complete"
