@@ -1,7 +1,7 @@
 #! /bin/bash
 
-#optional_command="/home/shadow/terraform/terraform init"
-optional_command=""
+optional_command="/home/shadow/terraform/terraform init"
+#optional_command=""
 
 if [ "$1" == "launch" ]; then
     echo "Launching/Destroying dynamodb"
