@@ -18,5 +18,7 @@ jobs:
         aws-region: ${{ vars.REGION }}
 
     - name: Update Lambda Function Code
-      run: bash deploy.sh
+      run: |
+        chmod +x deploy.sh
+        ./deploy.sh
       shell: bash
