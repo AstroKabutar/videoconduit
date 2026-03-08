@@ -4,7 +4,7 @@
 create_ses_identity=0
 generate_presigned_url=0
 generate_presigned_post=0
-submitjob=0
+submitjob=1
 
 if [ $create_ses_identity -eq 1 ]; then
     echo "Deploying create_ses_identity"

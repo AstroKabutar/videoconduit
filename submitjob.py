@@ -4,7 +4,7 @@ import os
 UPLOAD_PREFIX = "upload"
 KEY_SEPARATOR = "__."
 
-
+# logs to CloudWatch
 def _log(msg, **kwargs):
     """Print log line for CloudWatch; kwargs are appended as key=value."""
     parts = [f"[submitjob] {msg}"]
