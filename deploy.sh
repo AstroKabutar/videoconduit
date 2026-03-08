@@ -9,13 +9,13 @@ submitjob=1
 if [ $create_ses_identity -eq 1 ]; then
     echo "Deploying create_ses_identity"
     zip -r create_ses_identity.zip create_ses_identity.py
-    aws lambda update-function-code --function-name "${CREATE_SES_IDENTITY_FUNCTION_NAME}" --zip-file fileb://create_ses_identity.zip
+    aws lambda update-function-code --function-name "${CREATE_SES_IDENTITY_FUNCTION_NAME}" --zip-file fileb://create_ses_identity.zip > /dev/null 2>&1
 fi
 
 if [ $generate_presigned_url -eq 1 ]; then
     echo "Deploying generate_presigned_url"
     zip -r finisher.zip generate_presigned_url.py
-    aws lambda update-function-code --function-name "${GENERATE_PRESIGNED_URL_FUNCTION_NAME}" --zip-file fileb://finisher.zip
+    aws lambda update-function-code --function-name "${GENERATE_PRESIGNED_URL_FUNCTION_NAME}" --zip-file fileb://finisher.zip > /dev/null 2>&1
 fi
 
 if [ $generate_presigned_post -eq 1 ]; then
@@ -27,7 +27,7 @@ fi
 if [ $submitjob -eq 1 ]; then
     echo "Deploying submitjob"
     zip -r submitjob.zip submitjob.py
-    aws lambda update-function-code --function-name "${SUBMITJOB_FUNCTION_NAME}" --zip-file fileb://submitjob.zip
+    aws lambda update-function-code --function-name "${SUBMITJOB_FUNCTION_NAME}" --zip-file fileb://submitjob.zip > /dev/null 2>&1
 fi
 
 echo "Deployment complete"
