@@ -18,5 +18,10 @@ jobs:
         aws-region: ${{ vars.REGION }}
 
     - name: Update Lambda Function Code
+      env:
+        CREATE_SES_IDENTITY_FUNCTION_NAME: ${{ secrets.CREATE_SES_IDENTITY_FUNCTION_NAME }}
+        GENERATE_PRESIGNED_URL_FUNCTION_NAME: ${{ secrets.GENERATE_PRESIGNED_URL_FUNCTION_NAME }}
+        GENERATE_PRESIGNED_POST_FUNCTION_NAME: ${{ secrets.GENERATE_PRESIGNED_POST_FUNCTION_NAME }}
+        SUBMITJOB_FUNCTION_NAME: ${{ secrets.SUBMITJOB_FUNCTION_NAME }}
       run: bash deploy.sh
       shell: bash
