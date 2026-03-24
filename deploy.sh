@@ -1,9 +1,9 @@
 #! /bin/bash
 
 # Files to be depployed marked as 1
-create_ses_identity=0
-generate_presigned_url=0
-generate_presigned_post=0
+create_ses_identity=1
+generate_presigned_url=1
+generate_presigned_post=1
 submitjob=1
 
 if [ $create_ses_identity -eq 1 ]; then
