@@ -1,0 +1,52 @@
+on: push
+
+jobs:
+  Updating Videoconduit Frontend:
+    if: github.ref == 'refs/heads/frontend'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Login to AWS
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.REGION }}
+
+    - name: Update Videoconduit Frontend
+      env:
+        BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+      run: bash deploy.sh
+      shell: bash
+
+
+  Updating lambda functions:
+    if: github.ref == 'refs/heads/lambda_codes'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Login to AWS
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.REGION }}
+
+    - name: Update lambda functions
+      env:
+        CREATE_SES_IDENTITY_FUNCTION_NAME: ${{ secrets.CREATE_SES_IDENTITY_FUNCTION_NAME }}
+        GENERATE_PRESIGNED_URL_FUNCTION_NAME: ${{ secrets.GENERATE_PRESIGNED_URL_FUNCTION_NAME }}
+        GENERATE_PRESIGNED_POST_FUNCTION_NAME: ${{ secrets.GENERATE_PRESIGNED_POST_FUNCTION_NAME }}
+        SUBMITJOB_FUNCTION_NAME: ${{ secrets.SUBMITJOB_FUNCTION_NAME }}
+      run: bash deploy.sh
+      shell: bash
