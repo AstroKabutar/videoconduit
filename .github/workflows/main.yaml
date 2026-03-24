@@ -1,7 +1,7 @@
 on: push
 
 jobs:
-  Updating Videoconduit Frontend:
+  Updating_Videoconduit_Frontend:
     if: github.ref == 'refs/heads/frontend'
 
     runs-on: ubuntu-latest
@@ -25,7 +25,7 @@ jobs:
       shell: bash
 
 
-  Updating lambda functions:
+  Updating_lambda_functions:
     if: github.ref == 'refs/heads/lambda_codes'
 
     runs-on: ubuntu-latest
