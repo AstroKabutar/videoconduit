@@ -2,7 +2,7 @@
 
 # with full path example 'css/index.css'
 files-to-be-deployed=(
-
+    "index.html"
 )
 
 for file in ${files-to-be-deployed[@]}; do
